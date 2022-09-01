@@ -1,0 +1,156 @@
+import "tfplan-functions" as plan
+import "strings"
+import "types"
+
+allBigtableInstances = plan.find_resources("google_bigtable_instance")
+bigtable_allowed_region = ["us-central1", "us-east1"]
+messages_bt_cluster_main = {}
+
+//print(allBigtableInstances)
+
+message_bigtable_instances = {}
+for allBigtableInstances as address, rc {
+	bigtable_instance_name = plan.evaluate_attribute(rc, "name")
+	is_bigtable_instance_prod = rule { bigtable_instance_name contains "prod" and bigtable_instance_name not contains "nonprod" }
+	if is_bigtable_instance_prod {
+		message_bigtable_instances[bigtable_instance_name] = "prod"
+	} else {
+		message_bigtable_instances[bigtable_instance_name] = "non-prod"
+	}
+}
+
+print("Bigtable_instance_name_prod_map :==> " + plan.to_string(message_bigtable_instances))
+
+bt_cluster_zone_map_func = func(address, rc, bt_instance_name) {
+
+	bt_cluster = plan.evaluate_attribute(rc.change.after, "cluster")
+	bt_cluster_zone_map = {}
+	for bt_cluster as add, rt {
+		cluster_id = plan.evaluate_attribute(rt, "cluster_id")
+		cluster_zone = plan.evaluate_attribute(rt, "zone")
+        if (types.type_of(cluster_zone ) is "undefined" or types.type_of(cluster_zone ) is "null") {
+           print("Print Define Zone for the Bigtable cluster with Cluster_ID : "+ cluster_id+ " for resource "+address)
+           messages_bt_cluster_main[address] = rc
+
+        } else {
+		bt_cluster_zone_map[cluster_id] = cluster_zone
+        }
+	}
+	return bt_cluster_zone_map
+
+}
+
+prod_func = func(address, rc, bt_instance_name) {
+	messages_bt = {}
+	bt_cluster_zone_map = bt_cluster_zone_map_func(address, rc, bt_instance_name)
+	print("bt_cluster_zone_map:==>" + plan.to_string(bt_cluster_zone_map))
+	//print(address)
+	cluster_count = 0
+	unique_locations_count = 0
+	locations = []
+	region_array = []
+	unique_region_array = []
+	for bt_cluster_zone_map as ad, rt {
+		region_map = strings.split(rt, "-")
+		region = region_map[0] + "-" + region_map[1]
+		append(region_array, region)
+		cluster_count = cluster_count + 1
+		for region_array as add, rtt {
+			// print("HHHHHHH:==>"+plan.to_string(rtt))
+			if rtt not in unique_region_array {
+				append(unique_region_array, rtt)
+			}
+
+		}
+
+	}
+	print("locations :===>" + plan.to_string(locations))
+	print("Unique locations count :===>" + plan.to_string(unique_locations_count))
+	print("Region_Array :===>" + plan.to_string(region_array))
+	print("Cluster Count :===>" + plan.to_string(cluster_count))
+	print("Unique Region Array :===>" + plan.to_string(unique_region_array))
+
+	if (cluster_count < 2) {
+		print("Please Define one more cluster for resource : " + address + " For High Availability")
+		messages_bt[address] = rc
+	} else {
+		if cluster_count > length(unique_region_array) {
+			print("Please Select different regions for clusters for resource : " + address + " For High Availability")
+            print("Your Selected regions are : "+ plan.to_string(region_array))
+			messages_bt[address] = rc
+		} else {
+                for unique_region_array as lp, rs {
+                //print("RRRR: ==> "+plan.to_string(rs)) 
+                if rs not in bigtable_allowed_region {
+                    print("Please select region from allowed regions for resource "+address+ " .Allowed regions are: "+plan.to_string(bigtable_allowed_region))
+                    print("Your Selected regions are : "+ plan.to_string(region_array))
+                    messages_bt[address] = rc
+                }
+            }
+        }
+	}
+	return messages_bt
+
+}
+
+non_prod_func = func(address, rc, bt_instance_name) {
+	print("Called Non-Prod Func:==> " + address)
+	messages_bt_non_prod = {}
+	bt_cluster_zone_map_non_prod = bt_cluster_zone_map_func(address, rc, bt_instance_name)
+	print("bt_cluster_zone_map:==>" + plan.to_string(bt_cluster_zone_map_non_prod))
+	cluster_count = 0
+	unique_locations_count = 0
+	locations = []
+    region_array = []
+	unique_region_array = []
+	for bt_cluster_zone_map_non_prod as ad, rt {
+        region_map = strings.split(rt, "-")
+		region = region_map[0] + "-" + region_map[1]
+		append(region_array, region)
+		cluster_count = cluster_count + 1
+		if rt not in locations {
+		    append(locations,rt)
+		    unique_locations_count = unique_locations_count+1
+		}
+
+	}
+	print("locations :===>" + plan.to_string(locations))
+	print("Unique locations count :===>" + plan.to_string(unique_locations_count))
+    print("2Region_Array :===>" + plan.to_string(region_array))
+	print("Cluster Count :===>" + plan.to_string(cluster_count))
+
+	if (cluster_count < 2) {
+		print("Please Define one more cluster for resource : " + address + " For High Availability")
+		messages_bt_non_prod [address] = rc
+	} else {
+		if (cluster_count > unique_locations_count) {
+			print("Please Select different locations for clusters for resource : " + address + " For High Availability")
+			messages_bt_non_prod[address] = rc
+		} else {
+            for region_array as lpp, rttt {
+               if rttt not in bigtable_allowed_region {
+                    print("Please select region from allowed regions for resource "+address+ " .Allowed regions are: "+plan.to_string(bigtable_allowed_region))
+                    print("Your Selected regions are : "+ plan.to_string(region_array))
+                    messages_bt_non_prod[address] = rc
+
+               }
+            }
+        }
+	}
+	return messages_bt_non_prod 
+
+}
+msgs = {}
+call_prod_func = {}
+call_non_prod_func = {}
+for allBigtableInstances as address, rc {
+	bt_instance_name = plan.evaluate_attribute(rc, "name")
+	if message_bigtable_instances[bt_instance_name] == "prod" {
+		call_prod_func = prod_func(address, rc, bt_instance_name)
+	} else {
+		call_non_prod_func = non_prod_func(address, rc, bt_instance_name)
+	}
+    msgs = length(call_prod_func) + length(call_non_prod_func) + length(messages_bt_cluster_main)
+}
+
+main = rule { msgs is 0 }

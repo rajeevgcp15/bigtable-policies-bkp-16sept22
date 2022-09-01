@@ -1,0 +1,59 @@
+import "tfplan-functions" as plan
+import "strings"
+import "types"
+
+allBigtableInstances = plan.find_resources("google_bigtable_instance")
+bigtable_allowed_region = ["us-central1", "us-east1"]
+//print(allBigtableInstances)
+
+message_bigtable_instances = {}
+for allBigtableInstances as address, rc {
+    bigtable_instance_name = plan.evaluate_attribute(rc, "name")
+	is_bigtable_instance_prod = rule {bigtable_instance_name contains "prod" and bigtable_instance_name not contains "nonprod"}
+	if is_bigtable_instance_prod {
+		message_bigtable_instances[bigtable_instance_name] = "prod"
+	} else {
+		message_bigtable_instances[bigtable_instance_name] = "non-prod"
+	}
+}
+
+print("Bigtable_instance_name_prod_map :==> " + plan.to_string(message_bigtable_instances))
+
+prod_func = func(address, rc, bt_instance_name) {
+    //print("Called Prod Func:==> "+address)
+    //print(bt_instance_name)
+    //cluster_name_zone_map = {}
+       // print(rt)
+        bt_cluster = plan.evaluate_attribute(rc.change.after,"cluster")
+        //print(bt_cluster)
+        bt_cluster_zone_map = {}
+        for bt_cluster as add, rt {
+            cluster_id = plan.evaluate_attribute(rt,"cluster_id")
+            cluster_zone = plan.evaluate_attribute(rt,"zone")
+            //print(cluster_id)
+            //print(cluster_zone)
+            bt_cluster_zone_map[cluster_id] = cluster_zone
+        }
+        print("bt_cluster_zone_map:==>"+plan.to_string(bt_cluster_zone_map))
+
+    return null
+
+}
+
+non_prod_func = func(address, rc, bt_instance_name) {
+    print("Called Non-Prod Func:==> "+address)
+    return null
+}
+
+for allBigtableInstances as address, rc {
+    bt_instance_name = plan.evaluate_attribute(rc, "name")
+    if message_bigtable_instances[bt_instance_name] == "prod" {
+        call_prod_func = prod_func(address, rc, bt_instance_name)
+    } else {
+        call_non_prod_func = non_prod_func(address, rc, bt_instance_name)
+    }
+}
+
+
+
+main = rule {true}
