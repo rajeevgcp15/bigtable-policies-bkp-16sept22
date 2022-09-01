@@ -153,4 +153,5 @@ for allBigtableInstances as address, rc {
     msgs = length(call_prod_func) + length(call_non_prod_func) + length(messages_bt_cluster_main)
 }
 
-main = rule { msgs is 0 }
+GCP_BT_HA_PROD_BT_MULTI_ZONE = rule { msgs is 0}
+main = rule { GCP_BT_HA_PROD_BT_MULTI_ZONE }
