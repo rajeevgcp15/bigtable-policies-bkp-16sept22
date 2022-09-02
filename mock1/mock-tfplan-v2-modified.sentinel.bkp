@@ -215,10 +215,9 @@ resource_changes = {
 						],
 						"cluster_id":   "bt-instance-cluster-central",
 						"storage_type": "HDD",
-						"zone":         "us-east1-a",
-						//"zone":         "us-west1-b",
+						"zone":         "us-east1-b",
 					},
-					/*{
+					{
 						"autoscaling_config": [
 							{
 								"cpu_target": 50,
@@ -228,7 +227,7 @@ resource_changes = {
 						],
 						"cluster_id":   "bt-instance-cluster-east",
 						"storage_type": "HDD",
-						"zone":         "us-west1-b",
+						"zone":         "us-west1-c",
 					},
 					{
 						"autoscaling_config": [
@@ -241,26 +240,12 @@ resource_changes = {
 						"cluster_id":   "bt-instance-cluster-central2",
 						"storage_type": "HDD",
 						"zone":         "us-central1-b",
-						//"zone":         "us-west1-a",
 					},
-					{
-						"autoscaling_config": [
-							{
-								"cpu_target": 50,
-								"max_nodes":  5,
-								"min_nodes":  1,
-							},
-						],
-						"cluster_id":   "bt-instance-cluster-central4",
-						"storage_type": "HDD",
-						"zone":         "us-central1-c",
-						//"zone":         "us-west1-b",
-					},*/
 				],
 				"deletion_protection": false,
 				"instance_type":       "PRODUCTION",
 				"labels":              null,
-				"name":                "wf-us-prod-bt-00222-100",
+				"name":                "wf-us-nonprod-bt-00222-100",
 			},
 			"after_unknown": {
 				"cluster": [

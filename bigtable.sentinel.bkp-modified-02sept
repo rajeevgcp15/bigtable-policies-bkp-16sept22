@@ -40,19 +40,6 @@ bt_cluster_zone_map_func = func(address, rc, bt_instance_name) {
 
 }
 
-allowed_region_func = func(unique_region_array,region_array,messages_bt, address, rc) {
-
-	            for unique_region_array as lp, rs {
-                //print("RRRR: ==> "+plan.to_string(rs)) 
-                if rs not in bigtable_allowed_region {
-                    print("Please select region from allowed regions for resource "+address+ " .Allowed regions are: "+plan.to_string(bigtable_allowed_region))
-                    print("Your Selected regions are : "+ plan.to_string(region_array))
-                    messages_bt[address] = rc
-                }
-            }
-			return null
-}
-
 prod_func = func(address, rc, bt_instance_name) {
 	messages_bt = {}
 	bt_cluster_zone_map = bt_cluster_zone_map_func(address, rc, bt_instance_name)
@@ -105,12 +92,10 @@ prod_func = func(address, rc, bt_instance_name) {
 	if (cluster_count < 2) {
 		print("Please Define one more cluster for resource : " + address + " For High Availability")
 		messages_bt[address] = rc
-		
 	} else if (cluster_count == 2 and cluster_count > length(unique_region_array)) {
 			print("Please Select different regions for clusters for resource : " + address + " For High Availability")
             print("Your Selected regions are : "+ plan.to_string(region_array))
 			messages_bt[address] = rc
-
 	} else if (cluster_count == 3 ) {
 		print ("hello!!")
 		if (cluster_count > unique_locations_count or (cluster_count - length(unique_region_array)) > 1 ) {
@@ -119,7 +104,14 @@ prod_func = func(address, rc, bt_instance_name) {
 		messages_bt[address] = rc
 		
 		} else {
-            call_allowed_region_function = allowed_region_func(unique_region_array,region_array, messages_bt, address, rc)
+            for unique_region_array as lp, rs {
+                //print("RRRR: ==> "+plan.to_string(rs)) 
+                if rs not in bigtable_allowed_region {
+                    print("Please select region from allowed regions for resource "+address+ " .Allowed regions are: "+plan.to_string(bigtable_allowed_region))
+                    print("Your Selected regions are : "+ plan.to_string(region_array))
+                    messages_bt[address] = rc
+                }
+            }
 		}
 		
 	} else if (cluster_count == 4 ) {
@@ -130,11 +122,25 @@ prod_func = func(address, rc, bt_instance_name) {
 		print("And your selected zones are : "+plan.to_string(locations))
 		messages_bt[address] = rc
 		} else {
-           call_allowed_region_function = allowed_region_func(unique_region_array,region_array, messages_bt, address, rc)
+			    for unique_region_array as lp, rs {
+                //print("RRRR: ==> "+plan.to_string(rs)) 
+                if rs not in bigtable_allowed_region {
+                    print("Please select region from allowed regions for resource "+address+ " .Allowed regions are: "+plan.to_string(bigtable_allowed_region))
+                    print("Your Selected regions are : "+ plan.to_string(region_array))
+                    messages_bt[address] = rc
+                }
+            }
 		}
 		
 	} else {
-           call_allowed_region_function = allowed_region_func(unique_region_array,region_array, messages_bt, address, rc)
+                for unique_region_array as lp, rs {
+                //print("RRRR: ==> "+plan.to_string(rs)) 
+                if rs not in bigtable_allowed_region {
+                    print("Please select region from allowed regions for resource "+address+ " .Allowed regions are: "+plan.to_string(bigtable_allowed_region))
+                    print("Your Selected regions are : "+ plan.to_string(region_array))
+                    messages_bt[address] = rc
+                }
+            }
         }
 	return messages_bt
 
