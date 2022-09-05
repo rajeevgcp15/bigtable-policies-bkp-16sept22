@@ -8,18 +8,18 @@ messages_bt_cluster_main = {}
 
 //print(allBigtableInstances)
 
-bigtable_instance_classification_map = {}
+message_bigtable_instances = {}
 for allBigtableInstances as address, rc {
 	bigtable_instance_name = plan.evaluate_attribute(rc, "name")
 	is_bigtable_instance_prod = rule { bigtable_instance_name contains "prod" and bigtable_instance_name not contains "nonprod" }
 	if is_bigtable_instance_prod {
-		bigtable_instance_classification_map[bigtable_instance_name] = "prod"
+		message_bigtable_instances[bigtable_instance_name] = "prod"
 	} else {
-		bigtable_instance_classification_map[bigtable_instance_name] = "non-prod"
+		message_bigtable_instances[bigtable_instance_name] = "non-prod"
 	}
 }
 
-print("Bigtable_instance_name_prod_map :==> " + plan.to_string(bigtable_instance_classification_map))
+print("Bigtable_instance_name_prod_map :==> " + plan.to_string(message_bigtable_instances))
 
 bt_cluster_zone_map_func = func(address, rc, bt_instance_name) {
 
@@ -191,7 +191,7 @@ call_prod_func = {}
 call_non_prod_func = {}
 for allBigtableInstances as address, rc {
 	bt_instance_name = plan.evaluate_attribute(rc, "name")
-	if bigtable_instance_classification_map[bt_instance_name] == "prod" {
+	if message_bigtable_instances[bt_instance_name] == "prod" {
 		call_prod_func = prod_func(address, rc, bt_instance_name)
 	} else {
 		call_non_prod_func = non_prod_func(address, rc, bt_instance_name)
