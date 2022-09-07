@@ -217,7 +217,7 @@ resource_changes = {
 						"storage_type": "HDD",
 						"zone":         "us-east1-a",
 					},
-					{
+					/*{
 						"autoscaling_config": [
 							{
 								"cpu_target": 50,
@@ -227,7 +227,7 @@ resource_changes = {
 						],
 						"cluster_id":   "bt-instance-cluster-east",
 						"storage_type": "HDD",
-						"zone":         "us-central1-a",
+						"zone":         "us-central1-b",
 					},
 					{
 						"autoscaling_config": [
@@ -252,7 +252,7 @@ resource_changes = {
 						"cluster_id":   "bt-instance-cluster-central4",
 						"storage_type": "HDD",
 						"zone":         "us-central1-b",
-					},
+					},*/
 				],
 				"deletion_protection": false,
 				"instance_type":       "PRODUCTION",
