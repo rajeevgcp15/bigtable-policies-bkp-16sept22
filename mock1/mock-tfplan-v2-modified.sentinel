@@ -213,21 +213,9 @@ resource_changes = {
 								"min_nodes":  1,
 							},
 						],
-						"cluster_id":   "bt-instance-cluster-central",
+						"cluster_id":   "bt-instance-cluster-central1",
 						"storage_type": "HDD",
-						"zone":         "us-east1-a",
-					},
-					/*{
-						"autoscaling_config": [
-							{
-								"cpu_target": 50,
-								"max_nodes":  5,
-								"min_nodes":  1,
-							},
-						],
-						"cluster_id":   "bt-instance-cluster-east",
-						"storage_type": "HDD",
-						"zone":         "us-central1-b",
+						"zone":         "us-central1-a",
 					},
 					{
 						"autoscaling_config": [
@@ -239,7 +227,55 @@ resource_changes = {
 						],
 						"cluster_id":   "bt-instance-cluster-central2",
 						"storage_type": "HDD",
+						"zone":         "us-central1-b",
+					},
+					{
+						"autoscaling_config": [
+							{
+								"cpu_target": 50,
+								"max_nodes":  5,
+								"min_nodes":  1,
+							},
+						],
+						"cluster_id":   "bt-instance-cluster-central3",
+						"storage_type": "HDD",
+						"zone":         "us-central1-c",
+					},
+					{
+						"autoscaling_config": [
+							{
+								"cpu_target": 50,
+								"max_nodes":  5,
+								"min_nodes":  1,
+							},
+						],
+						"cluster_id":   "bt-instance-cluster-east1",
+						"storage_type": "HDD",
+						"zone":         "us-east1-a",
+					},
+					{
+						"autoscaling_config": [
+							{
+								"cpu_target": 50,
+								"max_nodes":  5,
+								"min_nodes":  1,
+							},
+						],
+						"cluster_id":   "bt-instance-cluster-east2",
+						"storage_type": "HDD",
 						"zone":         "us-east1-b",
+					},
+					{
+						"autoscaling_config": [
+							{
+								"cpu_target": 50,
+								"max_nodes":  5,
+								"min_nodes":  1,
+							},
+						],
+						"cluster_id":   "bt-instance-cluster-east3",
+						"storage_type": "HDD",
+						"zone":         "us-east1-c",
 					},
 					{
 						"autoscaling_config": [
@@ -251,8 +287,20 @@ resource_changes = {
 						],
 						"cluster_id":   "bt-instance-cluster-central4",
 						"storage_type": "HDD",
-						"zone":         "us-central1-b",
-					},*/
+						"zone":         "us-central1-f",
+					},
+										{
+						"autoscaling_config": [
+							{
+								"cpu_target": 50,
+								"max_nodes":  5,
+								"min_nodes":  1,
+							},
+						],
+						"cluster_id":   "bt-instance-cluster-central5",
+						"storage_type": "HDD",
+						"zone":         "us-central1-f",
+					},
 				],
 				"deletion_protection": false,
 				"instance_type":       "PRODUCTION",
