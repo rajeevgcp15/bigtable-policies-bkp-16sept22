@@ -126,7 +126,7 @@ prod_func = func(address, rc, bt_instance_name) {
 		}
 
 	} else {
-		print ("For Allowed Regions: "+plan.to_string(bigtable_allowed_region)+ "Cluster size more than 7 is not possible")
+		print ("For Allowed Regions: "+plan.to_string(bigtable_allowed_region)+ " , Cluster size more than 7 is not possible")
 		messages_bt[address] = rc
 	}
 	return messages_bt
@@ -162,7 +162,7 @@ non_prod_func = func(address, rc, bt_instance_name) {
 	if (cluster_count < 2) {
 		print("Please Define one more cluster for resource : " + address + " For High Availability")
 		messages_bt_non_prod[address] = rc
-	} else {
+	} else if (cluster_count >2 and cluster_count <=7 ){
 		if (cluster_count > unique_locations_count) {
 			print("Please Select different locations for clusters for resource : " + address + " For High Availability")
 			messages_bt_non_prod[address] = rc
@@ -176,6 +176,9 @@ non_prod_func = func(address, rc, bt_instance_name) {
 				}
 			}
 		}
+	} else {
+       	print ("2For Allowed Regions: "+plan.to_string(bigtable_allowed_region)+ " , Cluster size more than 7 is not possible")
+		messages_bt_non_prod[address] = rc
 	}
 	return messages_bt_non_prod
 
