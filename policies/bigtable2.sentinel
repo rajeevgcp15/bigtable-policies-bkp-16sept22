@@ -3,9 +3,10 @@ import "strings"
 import "types"
 
 allBigtableInstances = plan.find_resources("google_bigtable_instance")
-bigtable_allowed_region = ["us-central1", "us-east1","us-west1"]
+bigtable_allowed_region = ["us-central1", "us-east1", "us-west1"]
 messages_bt_cluster_main = {}
 
+//print(allBigtableInstances)
 
 bigtable_instance_classification_map = {}
 for allBigtableInstances as address, rc {
@@ -42,6 +43,7 @@ bt_cluster_zone_map_func = func(address, rc, bt_instance_name) {
 allowed_region_func = func(unique_region_array, region_array, messages_bt, address, rc) {
 
 	for unique_region_array as lp, rs {
+		//print("RRRR: ==> "+plan.to_string(rs))
 		if rs not in bigtable_allowed_region {
 			print("Please select region from allowed regions for resource " + address + " .Allowed regions are: " + plan.to_string(bigtable_allowed_region))
 			print("Your Selected regions are : " + plan.to_string(region_array))
@@ -54,7 +56,7 @@ allowed_region_func = func(unique_region_array, region_array, messages_bt, addre
 prod_func = func(address, rc, bt_instance_name) {
 	messages_bt = {}
 	bt_cluster_zone_map = bt_cluster_zone_map_func(address, rc, bt_instance_name)
-	//print("bt_cluster_zone_map:==>" + plan.to_string(bt_cluster_zone_map))
+	print("bt_cluster_zone_map:==>" + plan.to_string(bt_cluster_zone_map))
 	cluster_count = 0
 	unique_locations_count = 0
 	locations = []
@@ -66,7 +68,9 @@ prod_func = func(address, rc, bt_instance_name) {
 		region = region_map[0] + "-" + region_map[1]
 		append(region_array, region)
 		cluster_count = cluster_count + 1
+		//region_count_map[region] = cluster_count
 		for region_array as add, rtt {
+			// print("HHHHHHH:==>"+plan.to_string(rtt))
 			if rtt not in unique_region_array {
 				append(unique_region_array, rtt)
 			}
@@ -92,49 +96,61 @@ prod_func = func(address, rc, bt_instance_name) {
 	//print("locations :===>" + plan.to_string(locations))
 	//print("Unique locations count :===>" + plan.to_string(unique_locations_count))
 	//print("Region_Array :===>" + plan.to_string(region_array))
-	//print("Cluster Count :===>" + plan.to_string(cluster_count))
-	//print("Unique Region Array :===>" + plan.to_string(unique_region_array))
+	print("Cluster Count :===>" + plan.to_string(cluster_count))
+	print("Unique Region Array :===>" + plan.to_string(unique_region_array))
 	print("Region Count Map :===>" + plan.to_string(region_count_map))
 
 	if (cluster_count < 4) {
-		print("Please Define 4 clusters for resource : " + address + " For High Availability for PROD Instance")
+		print("Please Define minimum 4 clusters for resource : " + address + " For High Availability for PROD Instance")
 		messages_bt[address] = rc
 
-	} else if (cluster_count >= 4 and cluster_count % 2 == 0) {
-		if (values(region_count_map) != [cluster_count /2, cluster_count /2] ) {
-			print("Please Select different regions/zones for clusters for resource : " + address + " For High Availability")
-			print("For cluster Size :"+ plan.to_string(cluster_count) + ", There should be 2 different regions and all zones should be unique. Your Region counts are :" + plan.to_string(region_count_map))
+	} else if (cluster_count >= 4 ) {
+
+		region_length = length(keys(region_count_map))
+		region_values = values(region_count_map)
+		print("region_length :==>"+plan.to_string(region_length))
+        print("region map values :==> "+plan.to_string(region_values))
+
+		temp = 0
+		for region_values as a , b {
+			for region_values as x , y {
+            	if (region_values[a] < region_values[x]) {
+          			temp = region_values[a]
+          			region_values[a]=region_values[x]
+          			region_values[x]= temp
+
+     			 } 
+			}
+		}
+		print("Sorted Region_values : ==> "+plan.to_string(region_values))
+		if (length(unique_region_array) < 2 ) {
+			print("Please Select Minimum 2 regions for clusters for resource : " + address + " For High Availability")
+			print("Your Region counts are :" + plan.to_string(region_count_map))
 			print("And your selected zones are : " + plan.to_string(locations))
 			messages_bt[address] = rc
+
+		} else if ((region_values[-1] - region_values[0] > 1) ) {
+			print("The clusters are not evenly distributed across regions")
+			print("Your Region counts are :" + plan.to_string(region_count_map))
+			messages_bt[address] = rc
+			//call_allowed_region_function = allowed_region_func(unique_region_array, region_array, messages_bt, address, rc)
 		} else {
 			call_allowed_region_function = allowed_region_func(unique_region_array, region_array, messages_bt, address, rc)
 		}
 
-	} else if (cluster_count >= 4 and cluster_count % 2 != 0) {
-		if (values(region_count_map) != [(cluster_count-1) /2, (cluster_count-1) /2+1] and values(region_count_map) != [(cluster_count-1) /2+1, (cluster_count-1) /2] ) {
-			print("Please Select different regions/zones for clusters for resource : " + address + " For High Availability")
-			print("For cluster Size :"+ plan.to_string(cluster_count)+ ", There should be 2 different regions. Your Region counts are :" + plan.to_string(region_count_map))
-			print("And your selected zones are : " + plan.to_string(locations))
-			messages_bt[address] = rc
-		} else {
-			call_allowed_region_function = allowed_region_func(unique_region_array, region_array, messages_bt, address, rc)
-		}
-
-	} else {
-		print ("For Allowed Regions: "+plan.to_string(bigtable_allowed_region)+ " , Cluster size more than 7 is not possible")
-		messages_bt[address] = rc
-	}
+	} 
 	return messages_bt
 
 }
 
 non_prod_func = func(address, rc, bt_instance_name) {
+	print("Called Non-Prod Func:==> " + address)
 	messages_bt_non_prod = {}
 	bt_cluster_zone_map_non_prod = bt_cluster_zone_map_func(address, rc, bt_instance_name)
+	print("bt_cluster_zone_map:==>" + plan.to_string(bt_cluster_zone_map_non_prod))
 	cluster_count = 0
 	unique_locations_count = 0
 	locations = []
-    locations_orig = []
 	region_array = []
 	unique_region_array = []
 	for bt_cluster_zone_map_non_prod as ad, rt {
@@ -142,24 +158,22 @@ non_prod_func = func(address, rc, bt_instance_name) {
 		region = region_map[0] + "-" + region_map[1]
 		append(region_array, region)
 		cluster_count = cluster_count + 1
-        append(locations_orig, rt)
 		if rt not in locations {
 			append(locations, rt)
 			unique_locations_count = unique_locations_count + 1
 		}
 
 	}
-	print("locations without Duplicates :===>" + plan.to_string(locations))
-    //print("locations-ORIG :===>" + plan.to_string(locations_orig))
+	print("locations :===>" + plan.to_string(locations))
 	print("Unique locations count :===>" + plan.to_string(unique_locations_count))
-	//print("Region_Array :===>" + plan.to_string(region_array))
+	print("2Region_Array :===>" + plan.to_string(region_array))
 	print("Cluster Count :===>" + plan.to_string(cluster_count))
-    //print("Unique locations count :===>" + plan.to_string(unique_locations_count))
+
 	if (cluster_count < 2) {
-		print("Please Define Minimum 2 clusters for resource : " + address + " For High Availability")
+		print("Please Define one more cluster for resource : " + address + " For High Availability")
 		messages_bt_non_prod[address] = rc
-	} else if (cluster_count >2 ){
-		if (cluster_count > unique_locations_count ) {
+	} else if (cluster_count >2 and cluster_count <=7 ){
+		if (cluster_count > unique_locations_count) {
 			print("Please Select different locations for clusters for resource : " + address + " For High Availability")
 			messages_bt_non_prod[address] = rc
 		} else {
@@ -173,7 +187,7 @@ non_prod_func = func(address, rc, bt_instance_name) {
 			}
 		}
 	} else {
-       	print ("For Allowed Regions: "+plan.to_string(bigtable_allowed_region)+ " , Cluster size more than 7 is not possible")
+       	print ("2For Allowed Regions: "+plan.to_string(bigtable_allowed_region)+ " , Cluster size more than 7 is not possible")
 		messages_bt_non_prod[address] = rc
 	}
 	return messages_bt_non_prod

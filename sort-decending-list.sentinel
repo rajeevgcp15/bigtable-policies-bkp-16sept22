@@ -1,0 +1,16 @@
+import "types"
+list = [5,9,3]
+temp = 0
+for list as a , b {
+    for list as x , y {
+      if (list[a] > list[x]) {
+          temp = list[a]
+          list[a]=list[x]
+          list[x]= temp
+
+      } 
+    }
+    //print(list)
+}
+print(list)
+main = rule {true}
